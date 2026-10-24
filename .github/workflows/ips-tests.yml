@@ -1,0 +1,37 @@
+name: ips-tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  ips:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r ips/requirements.txt jsonschema
+      - name: IoT-IPS unit tests (all folders)
+        working-directory: ips/Person 6
+        run: python run_tests.py
+      - name: IoT-IPS demo on the real modules
+        working-directory: ips/Person 6
+        run: python run_demo.py
+      - name: IoT-IPS evaluation (14 events)
+        working-directory: ips/Person 1
+        run: python evaluate.py
+      - name: link scripts (adapter, seed, publisher, notifier)
+        run: python scripts/ips/test_ips.py
+  dashboard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: dashboard test (real API fixtures)
+        working-directory: services/frontend/test
+        run: npm install && npm test

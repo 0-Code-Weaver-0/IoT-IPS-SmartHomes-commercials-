@@ -1,0 +1,68 @@
+.env
+infra/certs/*
+!infra/certs/.gitkeep
+# CA private key + serial: must never leave the host
+infra/ca/
+infra/mosquitto/passwd
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+node_modules/
+.venv/
+.idea/
+.vscode/
+# runtime snapshot/export mount; NOT libs/common/tests/data
+/data/
+
+# --- secrets and keys (belt and braces: certs normally live in infra/certs and infra/ca)
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.csr
+*.srl
+
+# --- local databases, logs and runtime output
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# --- Python tooling
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.tox/
+build/
+dist/
+
+# --- editors / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- personal data: never commit face photos for recognition (vision module)
+known_faces/
+
+# --- vision: downloaded models, demo videos and photos of people never go into git
+services/vision/models/*
+!services/vision/models/.gitkeep
+!services/vision/models/join_models.py
+services/vision/media/videos/*
+!services/vision/media/videos/.gitkeep
+services/vision/media/known_faces/*
+!services/vision/media/known_faces/.gitkeep
+*.onnx
+*.pt
+
+# IoT-IPS and dashboard test outputs
+ips/**/incidents.db*
+ips/**/actions.jsonl
+scripts/ips/.notifier_state.json
+services/frontend/test/node_modules/

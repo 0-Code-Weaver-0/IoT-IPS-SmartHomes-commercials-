@@ -1,0 +1,10 @@
+HIGH-RISK IoT SECURITY ALERT
+
+Device: CAM-001
+Problem: Network denial-of-service (SYN flood) from 192.168.1.134
+Risk: 76/100 (High)
+MITRE ATT&CK: T1498 Network Denial of Service
+Action: Temporary block decided (dry-run); Administrator notified
+Status: Simulated containment
+Respond within: 1 hour
+Incident: INC-00030

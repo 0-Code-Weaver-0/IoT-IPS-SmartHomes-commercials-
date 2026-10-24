@@ -1,0 +1,10 @@
+CRITICAL IoT SECURITY ALERT
+
+Device: CAM-001
+Problem: Credential brute-force attempt from 192.168.1.77
+Risk: 82/100 (Critical)
+MITRE ATT&CK: T1110 Brute Force
+Action: Block decided (dry-run); Isolation decided (dry-run); Administrator notified
+Status: Open
+Respond within: 15 minutes
+Incident: INC-00003

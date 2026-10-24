@@ -1,0 +1,10 @@
+HIGH-RISK IoT SECURITY ALERT
+
+Device: CAM-001
+Problem: Traffic on an unexpected port or protocol from 203.0.113.5
+Risk: 61/100 (High)
+MITRE ATT&CK: T1571 Non-Standard Port
+Action: Temporary block decided (dry-run); Administrator notified
+Status: Open
+Respond within: 1 hour
+Incident: INC-00002

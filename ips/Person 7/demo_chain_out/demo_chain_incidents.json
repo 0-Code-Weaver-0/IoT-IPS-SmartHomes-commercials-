@@ -1,0 +1,393 @@
+[
+  {
+    "id": "INC-00028",
+    "timestamp": "2026-10-18T09:12:40Z",
+    "device_id": "BULB-001",
+    "device_type": "smart_bulb",
+    "criticality": "low",
+    "device_ip": "192.168.1.60",
+    "src_ip": "192.168.1.20",
+    "dst_ip": "192.168.1.60",
+    "dst_port": 80,
+    "protocol": "TCP",
+    "attempts": 3,
+    "duration": "6 seconds",
+    "source_type": "trusted internal host",
+    "mitre_technique": null,
+    "attack_type": "port_scan",
+    "confidence": 0.55,
+    "score": 29,
+    "level": "Low",
+    "factors": {
+      "confidence": {
+        "value": 55.0,
+        "weight": 0.2,
+        "contribution": 11.0,
+        "detail": "model_confidence"
+      },
+      "attack_severity": {
+        "value": 25.0,
+        "weight": 0.25,
+        "contribution": 6.25,
+        "detail": "port_scan"
+      },
+      "device_criticality": {
+        "value": 25.0,
+        "weight": 0.2,
+        "contribution": 5.0,
+        "detail": "low"
+      },
+      "persistence": {
+        "value": 24.29,
+        "weight": 0.15,
+        "contribution": 3.64,
+        "detail": "attempts=3"
+      },
+      "source_trust": {
+        "value": 20.0,
+        "weight": 0.1,
+        "contribution": 2.0,
+        "detail": "trusted_internal"
+      },
+      "behavioral_deviation": {
+        "value": 0.0,
+        "weight": 0.05,
+        "contribution": 0.0,
+        "detail": "port_expected"
+      },
+      "potential_impact": {
+        "value": 15.0,
+        "weight": 0.05,
+        "contribution": 0.75,
+        "detail": "port_scan"
+      }
+    },
+    "weight_set": "balanced",
+    "actions": [
+      "log",
+      "create_incident",
+      "monitor"
+    ],
+    "commands": [],
+    "skipped": [],
+    "rule_id": "low",
+    "reason": "rule low matched: level Low, score 29, confidence 0.55, attack known",
+    "warnings": [],
+    "status": "Monitoring"
+  },
+  {
+    "id": "INC-00029",
+    "timestamp": "2026-10-18T13:47:05Z",
+    "device_id": "TEMP-001",
+    "device_type": "temperature_sensor",
+    "criticality": "medium",
+    "device_ip": "192.168.1.70",
+    "src_ip": "192.168.1.77",
+    "dst_ip": "192.168.1.70",
+    "dst_port": 4444,
+    "protocol": "TCP",
+    "attempts": 9,
+    "duration": "3 minutes",
+    "source_type": "unknown internal host",
+    "mitre_technique": null,
+    "attack_type": "unexpected_protocol",
+    "confidence": 0.82,
+    "score": 54,
+    "level": "Medium",
+    "factors": {
+      "confidence": {
+        "value": 82.0,
+        "weight": 0.2,
+        "contribution": 16.4,
+        "detail": "model_confidence"
+      },
+      "attack_severity": {
+        "value": 35.0,
+        "weight": 0.25,
+        "contribution": 8.75,
+        "detail": "unexpected_protocol"
+      },
+      "device_criticality": {
+        "value": 50.0,
+        "weight": 0.2,
+        "contribution": 10.0,
+        "detail": "medium"
+      },
+      "persistence": {
+        "value": 40.35,
+        "weight": 0.15,
+        "contribution": 6.05,
+        "detail": "attempts=9"
+      },
+      "source_trust": {
+        "value": 60.0,
+        "weight": 0.1,
+        "contribution": 6.0,
+        "detail": "internal_unknown"
+      },
+      "behavioral_deviation": {
+        "value": 100.0,
+        "weight": 0.05,
+        "contribution": 5.0,
+        "detail": "port_unexpected"
+      },
+      "potential_impact": {
+        "value": 35.0,
+        "weight": 0.05,
+        "contribution": 1.75,
+        "detail": "unexpected_protocol"
+      }
+    },
+    "weight_set": "balanced",
+    "actions": [
+      "log",
+      "create_incident",
+      "notify_admin"
+    ],
+    "commands": [],
+    "skipped": [],
+    "rule_id": "medium",
+    "reason": "rule medium matched: level Medium, score 54, confidence 0.82, attack known",
+    "warnings": [],
+    "status": "Monitoring"
+  },
+  {
+    "id": "INC-00030",
+    "timestamp": "2026-10-19T02:31:18Z",
+    "device_id": "CAM-001",
+    "device_type": "surveillance_camera",
+    "criticality": "high",
+    "device_ip": "192.168.1.50",
+    "src_ip": "192.168.1.134",
+    "dst_ip": "192.168.1.50",
+    "dst_port": 554,
+    "protocol": "TCP",
+    "attempts": 48200,
+    "duration": "90 seconds",
+    "source_type": "unknown internal host",
+    "mitre_technique": null,
+    "attack_type": "dos",
+    "confidence": 0.91,
+    "score": 76,
+    "level": "High",
+    "factors": {
+      "confidence": {
+        "value": 91.0,
+        "weight": 0.2,
+        "contribution": 18.2,
+        "detail": "model_confidence"
+      },
+      "attack_severity": {
+        "value": 75.0,
+        "weight": 0.25,
+        "contribution": 18.75,
+        "detail": "dos"
+      },
+      "device_criticality": {
+        "value": 75.0,
+        "weight": 0.2,
+        "contribution": 15.0,
+        "detail": "high"
+      },
+      "persistence": {
+        "value": 100.0,
+        "weight": 0.15,
+        "contribution": 15.0,
+        "detail": "attempts=48200"
+      },
+      "source_trust": {
+        "value": 60.0,
+        "weight": 0.1,
+        "contribution": 6.0,
+        "detail": "internal_unknown"
+      },
+      "behavioral_deviation": {
+        "value": 0.0,
+        "weight": 0.05,
+        "contribution": 0.0,
+        "detail": "port_expected"
+      },
+      "potential_impact": {
+        "value": 70.0,
+        "weight": 0.05,
+        "contribution": 3.5,
+        "detail": "dos"
+      }
+    },
+    "weight_set": "balanced",
+    "actions": [
+      "temporary_block",
+      "create_incident",
+      "notify_admin"
+    ],
+    "commands": [
+      "iptables -I FORWARD -s 192.168.1.134 -m comment --comment iot-ips-temp -j DROP"
+    ],
+    "skipped": [],
+    "rule_id": "high_probable",
+    "reason": "rule high_probable matched: level High, score 76, confidence 0.91, attack known",
+    "warnings": [],
+    "status": "Simulated containment"
+  },
+  {
+    "id": "INC-00031",
+    "timestamp": "2026-10-19T21:05:52Z",
+    "device_id": "CAM-001",
+    "device_type": "surveillance_camera",
+    "criticality": "high",
+    "device_ip": "192.168.1.50",
+    "src_ip": "192.168.1.100",
+    "dst_ip": "192.168.1.50",
+    "dst_port": 22,
+    "protocol": "TCP",
+    "attempts": 431,
+    "duration": "4 minutes",
+    "source_type": "unknown internal host",
+    "mitre_technique": null,
+    "attack_type": "brute_force",
+    "confidence": 0.94,
+    "score": 81,
+    "level": "Critical",
+    "factors": {
+      "confidence": {
+        "value": 94.0,
+        "weight": 0.2,
+        "contribution": 18.8,
+        "detail": "model_confidence"
+      },
+      "attack_severity": {
+        "value": 70.0,
+        "weight": 0.25,
+        "contribution": 17.5,
+        "detail": "brute_force"
+      },
+      "device_criticality": {
+        "value": 75.0,
+        "weight": 0.2,
+        "contribution": 15.0,
+        "detail": "high"
+      },
+      "persistence": {
+        "value": 100.0,
+        "weight": 0.15,
+        "contribution": 15.0,
+        "detail": "attempts=431"
+      },
+      "source_trust": {
+        "value": 60.0,
+        "weight": 0.1,
+        "contribution": 6.0,
+        "detail": "internal_unknown"
+      },
+      "behavioral_deviation": {
+        "value": 100.0,
+        "weight": 0.05,
+        "contribution": 5.0,
+        "detail": "port_unexpected"
+      },
+      "potential_impact": {
+        "value": 75.0,
+        "weight": 0.05,
+        "contribution": 3.75,
+        "detail": "brute_force"
+      }
+    },
+    "weight_set": "balanced",
+    "actions": [
+      "block_source",
+      "isolate_device",
+      "create_incident",
+      "notify_admin"
+    ],
+    "commands": [
+      "iptables -I FORWARD -s 192.168.1.100 -m comment --comment iot-ips -j DROP",
+      "iptables -I FORWARD -s 192.168.1.50 -m comment --comment iot-ips -j DROP",
+      "iptables -I FORWARD -d 192.168.1.50 -m comment --comment iot-ips -j DROP"
+    ],
+    "skipped": [],
+    "rule_id": "critical_certain",
+    "reason": "rule critical_certain matched: level Critical, score 81, confidence 0.94, attack known",
+    "warnings": [],
+    "status": "Simulated containment"
+  },
+  {
+    "id": "INC-00032",
+    "timestamp": "2026-10-20T08:20:10Z",
+    "device_id": "CAM-001",
+    "device_type": "surveillance_camera",
+    "criticality": "high",
+    "device_ip": "192.168.1.50",
+    "src_ip": "192.168.1.10",
+    "dst_ip": "192.168.1.50",
+    "dst_port": 22,
+    "protocol": "TCP",
+    "attempts": 431,
+    "duration": "4 minutes",
+    "source_type": "trusted internal host",
+    "mitre_technique": null,
+    "attack_type": "brute_force",
+    "confidence": 0.94,
+    "score": 77,
+    "level": "High",
+    "factors": {
+      "confidence": {
+        "value": 94.0,
+        "weight": 0.2,
+        "contribution": 18.8,
+        "detail": "model_confidence"
+      },
+      "attack_severity": {
+        "value": 70.0,
+        "weight": 0.25,
+        "contribution": 17.5,
+        "detail": "brute_force"
+      },
+      "device_criticality": {
+        "value": 75.0,
+        "weight": 0.2,
+        "contribution": 15.0,
+        "detail": "high"
+      },
+      "persistence": {
+        "value": 100.0,
+        "weight": 0.15,
+        "contribution": 15.0,
+        "detail": "attempts=431"
+      },
+      "source_trust": {
+        "value": 20.0,
+        "weight": 0.1,
+        "contribution": 2.0,
+        "detail": "trusted_internal"
+      },
+      "behavioral_deviation": {
+        "value": 100.0,
+        "weight": 0.05,
+        "contribution": 5.0,
+        "detail": "port_unexpected"
+      },
+      "potential_impact": {
+        "value": 75.0,
+        "weight": 0.05,
+        "contribution": 3.75,
+        "detail": "brute_force"
+      }
+    },
+    "weight_set": "balanced",
+    "actions": [
+      "create_incident",
+      "notify_admin"
+    ],
+    "commands": [],
+    "skipped": [
+      {
+        "action": "temporary_block",
+        "why": "source_allow_listed"
+      }
+    ],
+    "rule_id": "high_probable",
+    "reason": "rule high_probable matched: level High, score 77, confidence 0.94, attack known",
+    "warnings": [],
+    "status": "Open"
+  }
+]

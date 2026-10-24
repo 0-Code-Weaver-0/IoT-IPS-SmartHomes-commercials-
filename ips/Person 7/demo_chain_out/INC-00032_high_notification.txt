@@ -1,0 +1,10 @@
+HIGH-RISK IoT SECURITY ALERT
+
+Device: CAM-001
+Problem: Credential brute-force attempt from 192.168.1.10
+Risk: 77/100 (High)
+MITRE ATT&CK: T1110 Brute Force
+Action: Administrator notified
+Status: Open
+Respond within: 1 hour
+Incident: INC-00032

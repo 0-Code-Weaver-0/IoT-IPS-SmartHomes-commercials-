@@ -1,0 +1,5 @@
+# Needed by the IPS modules (Persons 3-7): Python 3.10 or newer
+pyyaml>=6.0
+# Optional: run the tests with pytest as well (they also run with plain "python test_x.py")
+pytest>=7.0
+# Person 2's data scripts have their own pinned list: "Person 2/requirements.txt" (Python 3.11 or newer)
