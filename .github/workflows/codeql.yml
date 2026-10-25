@@ -1,29 +1,3 @@
-# name: CodeQL
-# on:
-#   push:
-#     branches: [main]
-#   pull_request:
-#     branches: [main]
-#   schedule:
-#     - cron: "0 6 * * 1"
-
-# jobs:
-#   analyze:
-#     name: Analyze (python)
-#     runs-on: ubuntu-latest
-#     permissions:
-#       security-events: write
-#       packages: read
-#       contents: read
-#     steps:
-#       - uses: actions/checkout@v4
-#       - uses: github/codeql-action/init@v3
-#         with:
-#           languages: python
-#       - uses: github/codeql-action/analyze@v3
-#         with:
-#           category: "/language:python"
-
 name: CodeQL
 on:
   push:
@@ -31,29 +5,21 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 3 * * 1'
-
-permissions:
-  contents: read
+    - cron: "0 6 * * 1"
 
 jobs:
   analyze:
-    runs-on: ubuntu-24.04
-    # Dependabot PRs get a read-only token, so CodeQL can't upload results
-    if: github.actor != 'dependabot[bot]'
+    name: Analyze (python)
+    runs-on: ubuntu-latest
     permissions:
-      actions: read
-      contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [python, actions]
+      packages: read
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v4
+      - uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-      - uses: github/codeql-action/analyze@v4
+          languages: python
+      - uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{ matrix.language }}"
+          category: "/language:python"

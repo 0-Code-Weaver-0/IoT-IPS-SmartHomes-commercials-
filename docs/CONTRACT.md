@@ -1,4 +1,4 @@
-# Shared Contract (v1.1)
+# Shared Contract (v1.2)
 
 **Breaking this contract breaks someone else's module.** Change it only through a PR to this file,
 approved by Person 1 and the owners of the affected modules. Code lives in
@@ -85,11 +85,15 @@ Snapshots referenced in `data.snapshot` are relative to the shared `data` volume
 | `smoke.detected` | simulators/vision | `sensor_id` | 100 |
 | `gas.detected` | simulators | `sensor_id`, `ppm` | 80 |
 | `water.leak` | simulators | `sensor_id` | 35 |
-| `cyber.port_scan` | cyber | `src_ip`, `dst_ip`, `ports` | 25 |
-| `cyber.brute_force` | cyber | `src_ip`, `target` | 35 |
+| `cyber.port_scan` | cyber | `src_ip`, `dst_ip`, `ports`, plus the IPS fields (3.1) | 25 |
+| `cyber.brute_force` | cyber | `src_ip`, `target`, plus the IPS fields (3.1) | 35 |
 | `cyber.rogue_device` | cyber | `mac`, `ip` | 30 |
 | `cyber.ip_blocked` | cyber | `ip`, `reason`, `expires_at` | not scored |
 | `cyber.ip_unblocked` | cyber | `ip` | not scored |
+| `cyber.dos` | cyber (IPS) | the IPS fields (3.1) | 40 |
+| `cyber.unexpected_traffic` | cyber (IPS) | the IPS fields (3.1) | 30 |
+| `cyber.block_applied` | cyber (IPS) | `ip`, `action`, `device_id`, `reason`, `dry_run` | not scored |
+| `cyber.block_refused` | cyber (IPS) | `ip`, `action`, `device_id`, `reason`, `dry_run` | not scored |
 
 Vision events also carry `camera_id` and `latency_ms` (capture to publish) in `data`;
 `person.detected` adds `name` when a known face matched; `face.unknown`/`fire.detected` always carry
@@ -97,6 +101,35 @@ Vision events also carry `camera_id` and `latency_ms` (capture to publish) in `d
 sends `motion.outdoor` only for zones listed under `outdoor_zones`.
 
 Adding a type: add a row here, then (if scored) a line in `config/risk_scores.yaml`.
+
+### 3.1 IPS detection data (`contract/ips_event_data.schema.json`)
+
+`cyber.port_scan`, `cyber.brute_force`, `cyber.dos` and `cyber.unexpected_traffic` carry these fields in
+`data`. All eleven are **required**. The fields each type already had (`ports`, `target`, ...) stay.
+Events still sent by the Suricata path without the new fields are valid until Person 5 adds them (see
+`docs/IPS_INTEGRATION.md`, section 7).
+
+| Field | Type | Rule |
+|---|---|---|
+| `src_ip` | string | IPv4 or IPv6 address that sent the traffic. The engine copies it into `system/block` **only when `direction` is `inbound`** |
+| `dst_ip` | string | IPv4 or IPv6 address that received it |
+| `dst_port` | integer 0-65535 | destination port; 0 when the protocol has no ports (ICMP, GRE) |
+| `protocol` | string | transport protocol in capitals: `TCP`, `UDP`, `ICMP`, `GRE` |
+| `direction` | `inbound` or `outbound` | `inbound`: someone talks to the device; `outbound`: the device talks to someone |
+| `device_id` | string `[a-z0-9_]+` | backend device id, for example `cam_001` (mapping in `docs/IPS_INTEGRATION.md`) |
+| `confidence` | number 0-1 | how sure the detector is |
+| `mitre_technique` | string | MITRE ATT&CK id, for example `T1110` or `T1557.002` |
+| `failed_attempts` | integer >= 0 | failed logins seen from the source in the window |
+| `connection_attempts` | integer >= 0 | connection attempts seen from the source in the window |
+| `duration` | number >= 0 | seconds covered by the window |
+
+Optional: `details` (same object as in 4.4). `severity_hint` follows the IPS level (`low` to `critical`).
+
+`cyber.block_applied` and `cyber.block_refused` report what the IPS did with a block decision. They use
+`ip` (never `src_ip`), so, like `cyber.ip_blocked`, they are never scored and never re-blocked.
+`action` is `block_source`, `temporary_block` or `isolate_device`; `reason` is the policy rule id
+(`block_applied`) or the refusal code such as `source_allow_listed` (`block_refused`); `dry_run` is a
+boolean. Optional: `expires_at`.
 
 ## 4. Payloads
 
@@ -141,6 +174,18 @@ Devices must be idempotent and publish their new state to `.../status`.
 
 The dashboard/API persists incidents and the timeline. Engine re-sends the same `id` to update
 (actions/summary) instead of creating duplicates.
+
+Optional `details` object (`contract/incident_details.schema.json`), added by the engine when one of the
+incident's events carries `data.details` (the highest-scoring one wins):
+
+```json
+{"details": {"mitre_technique": "T1110", "ips_score": 93, "ips_level": "critical", "ips_score_raw": 85,
+             "reports": {"technical": "# Security Incident Report ...", "executive": "# Security Incident Summary ..."}}}
+```
+
+`ips_score` is on the scale of section 7.1; `ips_score_raw` (the IPS's own 0-100) is optional. `reports` are
+plain text or Markdown of at most 12 KB each, written from untrusted event data: the dashboard must show
+them as text and never as HTML. API and dashboard ignore `details` when it is absent.
 
 ## 5. REST / WebSocket
 
@@ -235,6 +280,23 @@ mint certificates to bypass the ACLs.
 At **Critical**, `unlock_doors` fires — a fire is the classic Critical scenario and locked doors
 would trap people. Device-specific locking remains available via a `home/.../cmd` `lock` action.
 
+### 7.1 One level scale and the IPS score
+
+The only published scale is `levels` in `config/risk_scores.yaml`: **low 0, medium 31, high 61, critical 91**.
+The IPS works internally on 0/30/60/80 and converts its score once, at the boundary, so that its level
+name never changes:
+
+| IPS band | Level | Published band |
+|---|---|---|
+| 0-29 | low | 0-30 |
+| 30-59 | medium | 31-60 |
+| 60-79 | high | 61-90 |
+| 80-100 | critical | 91-100 |
+
+Inside a band the score is stretched linearly and rounded (an IPS 81 is published as 91, an IPS 85 as 93).
+The engine's zone score still comes only from the points in `config/risk_scores.yaml`; `details.ips_score`
+is shown next to it and never changes it. Reference code and examples: `docs/IPS_INTEGRATION.md`, section 5.
+
 ## 8. At-rest encryption (owned by Person 2 / API)
 
 The API encrypts persisted records (audit trail, incidents, alert archives) with AES-256-GCM from
@@ -293,6 +355,9 @@ Everything is configured in `config/risk_scores.yaml`; code only enforces it.
   `unlock_doors` only when a `life_safety_events` event (fire/smoke/gas) is part of the incident,
   otherwise doors are left alone. `event_actions` (e.g. `water.leak` -> `close_valve`) run per event.
 - Commands use section 4.2 with `requested_by: "engine"` and `reason: <incident id>`.
+- **IPS events (v1.2):** `block_ip` skips an event whose `data.direction` is `outbound` (its `src_ip` is the
+  device itself). The incident copies `data.details` from its highest-scoring event (section 4.4).
+  `cyber.block_applied` and `cyber.block_refused` are not scored.
 
 ## 12. Cyber behaviour (Person 5, `services/cyber`)
 
@@ -325,3 +390,6 @@ All cyber events use zone `network`. Details and settings: `services/cyber/READM
 - **Demo rig** (`docker compose --profile demo up`): `attacker` (nmap, hydra, raw DHCP) ->
   `smartlock` (victim; also refuses blocked sources), sniffed by `suricata` in the attacker's network
   namespace. Run it with `make demo-scan | demo-brute | demo-rogue | demo-attack`.
+- **IPS adapter (v1.2):** the IPS pipeline publishes its detections as `cyber.*` events (section 3.1) on
+  `security/alerts/cyber` with the cyber service's identity, zone `network`. No new topic and no ACL change.
+  Details: `docs/IPS_INTEGRATION.md`.

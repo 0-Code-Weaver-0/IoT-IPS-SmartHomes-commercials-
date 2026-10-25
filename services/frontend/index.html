@@ -1008,9 +1008,22 @@
     try { evs = (await apiFetch('/api/incidents/' + encodeURIComponent(id) + '/events')) || []; } catch(e) { logWs('sys', {incident_events_error: e.message}); }
     if(currentIncidentId === id) renderIncidentEvents(inc, evs);
   }
+  const MITRE_NAMES = {T1046: 'Network Service Discovery', T1110: 'Brute Force', T1498: 'Network Denial of Service', T1571: 'Non-Standard Port',
+    T1071: 'Application Layer Protocol', T1557: 'Adversary-in-the-Middle', T1595: 'Active Scanning', T1190: 'Exploit Public-Facing Application',
+    'T1584.005': 'Compromise Infrastructure: Botnet', T1078: 'Valid Accounts'};
   function renderIncidentEvents(inc, evs){
-    const reports = evs.filter(e => e.type === 'engine.ips_report'), rep = reports.length ? reports[reports.length - 1].data || {} : {};
-    const alerts = evs.filter(e => /^cyber\./.test(e.type)), last = alerts.length ? alerts[alerts.length - 1].data || {} : {};
+    // contract v1.2: the IPS detection event carries data.details (MITRE, IPS score, reports); older sources used engine.ips_report
+    const isDet = e => /^cyber\./.test(e.type) && !/^cyber\.block_/.test(e.type);
+    const dets = evs.filter(e => isDet(e) && e.data && e.data.details), legacy = evs.filter(e => e.type === 'engine.ips_report');
+    const alerts = evs.filter(isDet), last = alerts.length ? alerts[alerts.length - 1].data || {} : {};
+    let rep = legacy.length ? legacy[legacy.length - 1].data || {} : {};
+    if(dets.length){
+      const ev = dets[dets.length - 1], dd = ev.data || {}, dt = dd.details || {}, rp = dt.reports || {};
+      rep = {mitre_technique: dt.mitre_technique, mitre_name: MITRE_NAMES[dt.mitre_technique], attack_type: prettyName(String(ev.type).split('.')[1]),
+             confidence: dd.confidence, src_ip: dd.src_ip, device_id: dd.device_id, ips_score: dt.ips_score, ips_level: dt.ips_level,
+             report_technical: rp.technical, report_plain: rp.executive};
+    }
+    document.getElementById('incScore').textContent = rep.ips_score != null ? 'IPS ' + rep.ips_score + ' (' + rep.ips_level + ') · incident ' + inc.score : 'score ' + inc.score;
     // MITRE
     const mitre = document.getElementById('incMitre'); mitre.textContent = '';
     const mid = String(rep.mitre_technique || last.mitre_technique || '');
@@ -1029,7 +1042,7 @@
       const fill = el('div', 'feature-fill'); fill.style.width = v + '%';
       const track = el('div', 'feature-track'); track.appendChild(fill); row.append(top, track); fbox.appendChild(row);
     });
-    if(!fbox.children.length) fbox.appendChild(el('p', null, 'No risk factors attached.'));
+    if(!fbox.children.length) fbox.appendChild(el('p', null, 'This source sends no factor breakdown; see the technical report.'));
     // reports
     const tabs = document.getElementById('incTabs'); tabs.textContent = '';
     const texts = {technical: rep.report_technical, plain: rep.report_plain, notification: rep.notification};
@@ -1046,14 +1059,16 @@
     const tl = document.getElementById('incTimeline'); tl.textContent = '';
     evs.forEach(e => {
       const d = e.data || {}, item = el('div', 'timeline-item'), body = el('div');
-      const extra = e.type === 'engine.ips_report' ? 'IPS report attached' : [e.source, prettyZone(e.zone), d.src_ip, d.attempts != null ? d.attempts + ' attempts' : null].filter(Boolean).join(' · ');
+      const extra = e.type === 'engine.ips_report' ? 'IPS report attached'
+        : /^cyber\.block_/.test(e.type) ? [d.action, d.ip, d.dry_run ? 'dry run' : null, d.reason].filter(Boolean).join(' · ')
+        : [e.source, prettyZone(e.zone), d.src_ip, d.attempts != null ? d.attempts + ' attempts' : null, d.details && d.details.mitre_technique].filter(Boolean).join(' · ');
       body.append(el('div', 'timeline-time', fmtTime(e.ts)), el('div', 'timeline-text', prettyName(e.type) + ' — ' + extra));
       item.append(el('div', 'timeline-dot'), body); tl.appendChild(item);
     });
     if(!tl.children.length) tl.appendChild(el('p', null, 'No events found for this incident.'));
   }
   function ipsAlertsText(deviceId){
-    const l = RAW_EVENTS.filter(e => e.data && e.data.device_id === deviceId && /^cyber\./.test(e.type));
+    const l = RAW_EVENTS.filter(e => e.data && e.data.device_id === deviceId && /^cyber\./.test(e.type) && !/^cyber\.block_/.test(e.type));
     return l.length ? l.length + ' · latest ' + prettyName(l[0].type) + ' (' + fmtTime(l[0].ts) + ')' : 'none';
   }
   renderIncidentList();

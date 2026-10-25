@@ -29,19 +29,20 @@ let passed=0;const ok=(c,m)=>{assert.ok(c,m);passed++;console.log('PASS ',m)};
   ok(d.getElementById('view-incident-detail').classList.contains('active'),'clicking an incident opens its detail view');
   ok(d.getElementById('incTitle').textContent.includes('Critical'),'title shows the incident summary');
   const a=d.querySelector('#incMitre a');ok(a&&/^https:\/\/attack\.mitre\.org\/techniques\/T\d{4}\/$/.test(a.href)&&a.rel.includes('noopener'),'MITRE technique is a safe link: '+(a&&a.textContent.trim()));
-  ok(d.querySelectorAll('#incFactors .feature-row').length>=5,'risk factors are drawn as bars');
-  ok(d.querySelectorAll('#incTabs button').length===3,'three report tabs (technical, plain, notification)');
+  ok(d.getElementById('incFactors').textContent.includes('no factor breakdown'),'the factor panel explains that this source sends none');
+  ok(d.querySelectorAll('#incTabs button').length===2,'two report tabs (technical, plain language)');
   ok(d.querySelector('#incReport table')&&d.getElementById('incReport').textContent.includes('MITRE'),'technical report renders with tables');
   d.querySelector('#incTabs button[data-tab="plain"]').click();
   ok(d.getElementById('incReport').textContent.includes('What happened?'),'plain-language tab switches');
-  ok(!d.getElementById('incCopy').hidden,'copy-notification button appears');
+  ok(d.getElementById('incCopy').hidden,'no copy button when the source sends no notification text');
+  ok(d.getElementById('incScore').textContent.includes('IPS '),'header shows the IPS score next to the incident score');
   ok(d.querySelectorAll('#incTimeline .timeline-item').length===fx.incident_events[target.id].length,'timeline lists every event');
   ok(d.querySelectorAll('#incActions li').length>=1,'response actions are listed');
   // device panel
   w.eval("openEntity({kind:'device',id:'cam_001'})");
   ok(d.body.textContent.includes('IPS alerts'),'device panel shows IPS alerts');
   // XSS: hostile text inside the report and event fields must stay text
-  dom=boot(data=>{const evs=data.incident_events[target.id];evs.forEach(e=>{if(e.type==='engine.ips_report'){e.data.report_technical='# '+EVIL+'\n| a | '+EVIL+' |\n- '+EVIL;e.data.report_plain=EVIL;e.data.mitre_technique='T1110" onmouseover="window.__pwned=3';e.data.attack_type=EVIL}else e.data.src_ip=EVIL});});
+  dom=boot(data=>{const evs=data.incident_events[target.id];evs.forEach(e=>{if(e.data&&e.data.details){e.data.details.reports.technical='# '+EVIL+'\n| a | '+EVIL+' |\n- '+EVIL;e.data.details.reports.executive=EVIL;e.data.details.mitre_technique='T1110" onmouseover="window.__pwned=3'}e.data.src_ip=EVIL});});
   w=dom.window;d=w.document;await w.eval('loadBackendState()');await wait(100);
   d.querySelector(`[data-incident="${target.id}"]`).click();await wait(150);
   ok(!d.querySelector('#view-incident-detail img, #view-incident-detail script'),'hostile HTML in reports and events is not turned into elements');

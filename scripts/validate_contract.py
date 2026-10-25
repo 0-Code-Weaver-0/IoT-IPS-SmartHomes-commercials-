@@ -46,5 +46,37 @@ assert "block_ip" in risk["responses"]["high"], "block_ip must fire at High (dem
 assert "unlock_doors" in risk["responses"]["critical"], "Critical must unlock doors"
 assert "lock_doors" not in risk["responses"]["critical"], "never lock doors at Critical (fire!)"
 
+# IPS contract (v1.2): new scored types, data schemas, device mapping.
+for t in ("cyber.dos", "cyber.unexpected_traffic"):
+    assert t in risk["events"], f"{t} must be scored in config/risk_scores.yaml"
+registry = (root / "docs/CONTRACT.md").read_text(encoding="utf-8")
+for t in ("cyber.dos", "cyber.unexpected_traffic", "cyber.block_applied", "cyber.block_refused"):
+    assert f"| `{t}` |" in registry, f"{t} missing from the registry in docs/CONTRACT.md"
+ips_schema = json.loads((root / "contract/ips_event_data.schema.json").read_text())
+details_schema = json.loads((root / "contract/incident_details.schema.json").read_text())
+block_schema = json.loads((root / "contract/ips_block_data.schema.json").read_text())
+for s in (ips_schema, details_schema, block_schema):
+    jsonschema.Draft202012Validator.check_schema(s)
+ips_sample = {"src_ip": "203.0.113.45", "dst_ip": "192.168.1.50", "dst_port": 22, "protocol": "TCP",
+              "direction": "inbound", "device_id": "cam_001", "confidence": 0.98,
+              "mitre_technique": "T1110",
+              "failed_attempts": 300, "connection_attempts": 300, "duration": 240}
+jsonschema.validate(ips_sample, ips_schema)
+jsonschema.validate({"mitre_technique": "T1110", "ips_score": 93, "ips_level": "critical",
+                     "reports": {"technical": "t", "executive": "e"}}, details_schema)
+jsonschema.validate({"ip": "203.0.113.45", "action": "block_source", "device_id": "cam_001",
+                     "reason": "critical_certain", "dry_run": True}, block_schema)
+ips_devices = json.loads((root / "config/ips_devices.json").read_text())["devices"]
+sim_file = yaml.safe_load((root / "services/simulators/devices.yaml").read_text())
+sim_ids = {d["id"] for d in sim_file["devices"]}
+backend_ids = [d["backend_id"] for d in ips_devices]
+assert len(set(backend_ids)) == len(backend_ids), "backend ids must be unique"
+assert not set(backend_ids) & sim_ids, "an IPS device id collides with a simulated device"
+for d in ips_devices:
+    token = __import__("re").compile(r"[a-z0-9_]+")
+    assert all(token.fullmatch(d[k]) for k in ("backend_id", "backend_type", "zone")), d
+    assert d["zone"] in zones and d["zone"] != "network", f"bad zone for {d['device_id']}"
+print("ips contract OK:", len(ips_devices), "devices")
+
 print("contract OK:", len(risk["events"]), "scored event types,", len(zones), "zones")
 sys.exit(0)

@@ -18,7 +18,10 @@
         123,
         443,
         8883
-      ]
+      ],
+      "zone": "entrance",
+      "backend_id": "cam_001",
+      "backend_type": "camera"
     },
     {
       "device_id": "THERMO-001",
@@ -33,11 +36,9 @@
         53,
         443
       ],
-      "expected_outbound_ports": [
-        53,
-        123,
-        443
-      ]
+      "zone": "living_room",
+      "backend_id": "thermo_001",
+      "backend_type": "temperature"
     },
     {
       "device_id": "PLUG-001",
@@ -53,12 +54,9 @@
         443,
         53
       ],
-      "expected_outbound_ports": [
-        53,
-        123,
-        80,
-        443
-      ]
+      "zone": "living_room",
+      "backend_id": "plug_001",
+      "backend_type": "plug"
     },
     {
       "device_id": "TEMP-001",
@@ -72,11 +70,9 @@
         80,
         1883
       ],
-      "expected_outbound_ports": [
-        53,
-        123,
-        1883
-      ]
+      "zone": "kitchen",
+      "backend_id": "temp_001",
+      "backend_type": "temperature"
     },
     {
       "device_id": "BULB-001",
@@ -90,11 +86,9 @@
       "expected_ports": [
         80
       ],
-      "expected_outbound_ports": [
-        53,
-        80,
-        443
-      ]
+      "zone": "bedroom",
+      "backend_id": "bulb_001",
+      "backend_type": "bulb"
     },
     {
       "device_id": "IND-001",
@@ -107,9 +101,9 @@
       "expected_ports": [
         502
       ],
-      "expected_outbound_ports": [
-        502
-      ]
+      "zone": "garage",
+      "backend_id": "ind_001",
+      "backend_type": "industrial_sensor"
     }
   ]
 }

@@ -17,8 +17,10 @@ events:
   cyber.port_scan: 25
   cyber.brute_force: 35
   cyber.rogue_device: 30
+  cyber.dos: 40                 # IPS: above brute force (35), as in the IPS severity order
+  cyber.unexpected_traffic: 30  # IPS: between port scan (25) and brute force (35); same weight as a rogue device
   water.leak: 35
-levels:                    # inclusive lower bounds
+levels:                    # inclusive lower bounds; the one published scale (CONTRACT 7.1)
   low: 0
   medium: 31
   high: 61

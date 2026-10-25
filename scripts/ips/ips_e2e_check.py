@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks, through the API, that IPS incidents reached the backend with their reports (run after fake_ips_publisher.py).
+"""Checks, through the API, that IPS detections reached the backend with their reports (run after fake_ips_publisher.py).
 Exit code 0 = all checks passed.   python scripts/ips/ips_e2e_check.py [--expect 7]"""
 import argparse
 import sys
@@ -12,7 +12,8 @@ from ips_transport import add_transport_args, make_transport  # noqa: E402
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     add_transport_args(p)
-    p.add_argument("--expect", type=int, default=7, help="minimum number of INC-* incidents expected")
+    p.add_argument("--expect", type=int, default=7, help="minimum number of IPS detections expected")
+    p.add_argument("--standalone", action="store_true", help="also check incidents and risk (publisher ran with --standalone)")
     a = p.parse_args(argv)
     t = make_transport(a)
     bad = []
@@ -24,20 +25,22 @@ def main(argv=None) -> int:
     _, devices = t.api("GET", "/devices")
     ids = {d["device_id"] for d in devices or []}
     check({"cam_001", "thermo_001"} <= ids, "IPS devices are registered (%d devices)" % len(ids))
-    _, incs = t.api("GET", "/incidents", params={"limit": 100})
-    mine = [i for i in incs or [] if str(i["id"]).startswith("INC-")]
-    check(len(mine) >= a.expect, "at least %d IPS incidents stored (found %d)" % (a.expect, len(mine)))
-    for i in mine:
-        _, evs = t.api("GET", "/incidents/%s/events" % i["id"])
-        types = [e["type"] for e in evs or []]
-        rep = [e for e in evs or [] if e["type"] == "engine.ips_report"]
-        ok = bool(rep) and any(x.startswith("cyber.") for x in types)
-        d = rep[-1]["data"] if rep else {}
-        ok = ok and bool(d.get("report_technical")) and bool(d.get("report_plain")) and bool(d.get("mitre_technique"))
-        check(ok, "%s: alert + report events with MITRE and both reports (%d events, %s)" % (i["id"], len(types), i["level"]))
-        check([e["ts"] for e in evs or []] == sorted(e["ts"] for e in evs or []), "%s: timeline is in time order" % i["id"])
-    _, risk = t.api("GET", "/risk")
-    check(any(r["level"] in ("high", "critical") for r in risk or []), "a high or critical zone risk is published")
+    _, events = t.api("GET", "/events", params={"limit": 500})
+    dets = [e for e in events or [] if e["type"] in ("cyber.port_scan", "cyber.brute_force", "cyber.dos", "cyber.unexpected_traffic")
+            and "details" in (e.get("data") or {})]
+    check(len(dets) >= a.expect, "at least %d IPS detections stored with details (found %d)" % (a.expect, len(dets)))
+    for e in dets[:a.expect]:
+        d, det = e["data"], e["data"]["details"]
+        ok = all(det.get("reports", {}).get(k) for k in ("technical", "executive")) and det.get("mitre_technique") and d.get("device_id")
+        check(bool(ok), "%s on %s: MITRE %s, IPS %s (%s), both reports present" % (e["type"], d.get("device_id"),
+              det.get("mitre_technique"), det.get("ips_score"), det.get("ips_level")))
+    blocks = [e for e in events or [] if e["type"] in ("cyber.block_applied", "cyber.block_refused")]
+    check(any(b["data"].get("dry_run") is True for b in blocks), "dry-run block results are stored (%d)" % len(blocks))
+    if a.standalone:
+        _, incs = t.api("GET", "/incidents", params={"limit": 100})
+        check(len(incs or []) >= a.expect, "standalone incidents exist (%d)" % len(incs or []))
+        _, risk = t.api("GET", "/risk")
+        check(any(r["level"] in ("high", "critical") for r in risk or []), "a high or critical risk is published")
     print("\n%s" % ("ALL CHECKS PASSED" if not bad else "%d CHECK(S) FAILED" % len(bad)))
     return 1 if bad else 0
 

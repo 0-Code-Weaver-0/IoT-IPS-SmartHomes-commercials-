@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Registers the IoT-IPS devices (Person 1's devices.json) in the SmartSecure backend so they appear in Warden.
+"""Registers the IoT-IPS devices (config/ips_devices.json) in the SmartSecure backend so they appear in the dashboard.
 
-    python scripts/ips/seed_ips_devices.py --devices "../Person 1/devices.json"          (docker stack)
+    python scripts/ips/seed_ips_devices.py                                              (docker stack)
     python scripts/ips/seed_ips_devices.py --mode local --base http://localhost:8000 ...
 
 Safe to run again: devices that already exist are skipped (HTTP 409). Exit code 0 = every device present.
@@ -26,11 +26,12 @@ def load_profiles(path: Path) -> list:
 
 def device_payload(profile: dict, zones=()) -> dict:
     ips_id = str(profile["device_id"])
+    zone = profile.get("zone") if profile.get("zone") in zones or not zones else "network"
     return {
-        "device_id": m.backend_device_id(ips_id),
+        "device_id": m.backend_device_id(ips_id, profile),
         "name": ("%s (%s)" % (str(profile.get("device_type", "device")).replace("_", " ").title(), ips_id))[:100],
-        "device_type": m.backend_device_type(profile.get("device_type")),
-        "zone": m.device_zone(ips_id, profile, zones),
+        "device_type": str(profile.get("backend_type") or m.token(profile.get("device_type"))),
+        "zone": str(zone or "network"),
         "online": True,
         "state": {k: v for k, v in {"ip": profile.get("ip"), "trust_score": 90, "ips_device_id": ips_id,
                                     "criticality": profile.get("criticality")}.items() if v is not None},
@@ -40,7 +41,8 @@ def device_payload(profile: dict, zones=()) -> dict:
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     add_transport_args(p)
-    p.add_argument("--devices", required=True, help="path to Person 1's devices.json")
+    p.add_argument("--devices", default=str(Path(__file__).resolve().parent.parent.parent / "config" / "ips_devices.json"),
+                   help="device list (default: config/ips_devices.json)")
     p.add_argument("--dry-run", action="store_true", help="print what would be created")
     a = p.parse_args(argv)
     try:
